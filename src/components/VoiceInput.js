@@ -6,28 +6,52 @@ const VoiceInput = () => {
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false); // New state to manage speaking
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleInputChange = (event) => {
     setInput(event.target.value);
   };
 
-  const handleSubmit = async () => {
+  const handleIntroduceSubmit = async () => {
     setIsProcessing(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/response', { input });
+      const res = await axios.get('http://127.0.0.1:5000/api/introduce');
       setResponse(res.data.response);
 
-      // Create a new SpeechSynthesisUtterance and speak the response
+      if (!('speechSynthesis' in window)) {
+        console.error("Speech synthesis not supported in this browser.");
+        return;
+      }
+
+      speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(res.data.response);
-      
-      // Set the speaking state to true when the speech starts
       utterance.onstart = () => setIsSpeaking(true);
-
-      // Set the speaking state to false when the speech ends
       utterance.onend = () => setIsSpeaking(false);
+      speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error('Error fetching response:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-      // Speak the text
+  const handleQuestionSubmit = async () => {
+    if (!input.trim()) return;
+
+    setIsProcessing(true);
+    try {
+      const res = await axios.post('http://127.0.0.1:5000/api/answer', { question: input });
+      setResponse(res.data.answer);
+
+      if (!('speechSynthesis' in window)) {
+        console.error("Speech synthesis not supported in this browser.");
+        return;
+      }
+
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(res.data.answer);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
       speechSynthesis.speak(utterance);
     } catch (error) {
       console.error('Error fetching response:', error);
@@ -38,15 +62,30 @@ const VoiceInput = () => {
 
   return (
     <div className="voice-input-container">
-      <input
-        type="text"
-        value={input}
-        onChange={handleInputChange}
-        placeholder="Ask me something..."
-      />
-      <button onClick={handleSubmit}>Ask</button>
-      
-      {/* Show the wave animation only when speaking */}
+      <h1>Voxilla Voice Assistant</h1>
+      <div className="input-button-group">
+        <input
+          type="text"
+          value={input}
+          onChange={handleInputChange}
+          placeholder="Ask me something..."
+        />
+        <button onClick={handleQuestionSubmit} disabled={isProcessing}>
+          {isProcessing ? (
+            <span className="loading-icon">⏳</span>
+          ) : (
+            <span>❓ Ask</span>
+          )}
+        </button>
+        <button onClick={handleIntroduceSubmit} disabled={isProcessing}>
+          {isProcessing ? (
+            <span className="loading-icon">⏳</span>
+          ) : (
+            <span>👋 Introduce</span>
+          )}
+        </button>
+      </div>
+
       {isSpeaking && (
         <div className="wave-container">
           <div className="wave"></div>
