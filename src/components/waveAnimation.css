@@ -1,0 +1,52 @@
+/* src/components/WaveAnimation.css */
+
+.wave-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 25px;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.wave-container.active {
+  opacity: 1;
+}
+
+.wave {
+  width: 14px;
+  height: 14px;
+  background-color: #7a4fff;
+  border-radius: 50%;
+  animation: wave 1.4s infinite ease-in-out;
+}
+
+.wave1 {
+  animation-delay: 0s;
+}
+
+.wave2 {
+  animation-delay: 0.2s;
+}
+
+.wave3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: scale(1);
+    background-color: #7a4fff;
+  }
+  50% {
+    transform: scale(1.5);
+    background-color: #c084fc;
+  }
+}
+
+@media (max-width: 600px) {
+  .wave {
+    width: 12px;
+    height: 12px;
+  }
+}
