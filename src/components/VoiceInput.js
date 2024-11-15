@@ -30,6 +30,7 @@ const VoiceInput = () => {
       speechSynthesis.speak(utterance);
     } catch (error) {
       console.error('Error fetching response:', error);
+      setResponse('Error fetching response. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -41,7 +42,7 @@ const VoiceInput = () => {
     setIsProcessing(true);
     try {
       const res = await axios.post('http://127.0.0.1:5000/api/answer', { question: input });
-      setResponse(res.data.answer);
+      setResponse(res.data.answer || res.data.error || "Sorry, I couldn't process your question.");
 
       if (!('speechSynthesis' in window)) {
         console.error("Speech synthesis not supported in this browser.");
@@ -49,12 +50,13 @@ const VoiceInput = () => {
       }
 
       speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(res.data.answer);
+      const utterance = new SpeechSynthesisUtterance(res.data.answer || res.data.error);
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       speechSynthesis.speak(utterance);
     } catch (error) {
-      console.error('Error fetching response:', error);
+      console.error('Error response:', error.response?.data || error.message);
+      setResponse(error.response?.data?.error || 'Error processing your question. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -92,7 +94,11 @@ const VoiceInput = () => {
         </div>
       )}
 
-      {response && <p>{response}</p>}
+      {response && (
+        <p>
+          <span className="typing-effect">{response}</span>
+        </p>
+      )}
     </div>
   );
 };
